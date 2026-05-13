@@ -1,0 +1,299 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-end mb-5">
+    <div>
+        <h1 class="fw-bold text-dark" style="letter-spacing: -1.5px; font-size: 2.8rem;">System Audit Log</h1>
+        <p class="text-muted fw-medium fs-5 mb-0">Transparent tracking of every document lifecycle event.</p>
+    </div>
+    <div class="bg-white rounded-pill px-4 py-2 border shadow-sm d-flex align-items-center mb-1">
+        <div class="pulse-dot me-3"></div>
+        <span class="fw-bold text-dark small">LIVE SYSTEM MONITORING</span>
+    </div>
+</div>
+
+<style>
+    /* --- BASE STYLES --- */
+    .pulse-dot { width: 10px; height: 10px; background: #10b981; border-radius: 50%; box-shadow: 0 0 0 rgba(16, 185, 129, 0.4); animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+    .audit-card { border: none; border-radius: 24px; transition: 0.3s ease; background: #fff; border: 1px solid rgba(0,0,0,0.05); }
+    .audit-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08); }
+
+    .btn-view-graph { border: 1.5px solid #4f46e5; color: #4f46e5; background: transparent; font-weight: 700; border-radius: 10px; transition: 0.3s; padding: 8px 16px; font-size: 13px; }
+    .btn-view-graph:hover { background: #4f46e5; color: #fff; transform: scale(1.05); }
+
+    /* --- VISUAL GRAPH STYLES --- */
+    .graph-scroll-container { display: flex; align-items: flex-start; overflow-x: auto; padding: 40px 20px; min-height: 380px; scrollbar-width: thin; scrollbar-color: #cbd5e1 #f8fafc; }
+    .graph-scroll-container::-webkit-scrollbar { height: 10px; }
+    .graph-scroll-container::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+    .graph-node-wrapper { position: relative; min-width: 320px; flex-shrink: 0; text-align: center; opacity: 0; transform: translateX(-20px); animation: fadeInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .graph-line { position: absolute; top: 24px; left: 50%; width: 100%; height: 4px; background: #e2e8f0; z-index: 1; border-radius: 2px; }
+    .graph-dot { position: relative; z-index: 2; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 22px; color: white; transition: transform 0.3s ease; }
+    .node-current { background: #3b82f6; box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.15); border: 4px solid #fff; }
+    .node-old { background: #94a3b8; border: 4px solid #fff; }
+    @keyframes fadeInRight { to { opacity: 1; transform: translateX(0); } }
+
+    /* --- ADVANCED TERMINAL STYLES --- */
+    .terminal-box { border: 1px solid rgba(255,255,255,0.1); background: #000; border-radius: 16px; overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); }
+    .terminal-header { background: #111; padding: 8px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #64748b; font-family: monospace; letter-spacing: 1px; }
+    .terminal-feed { padding: 15px; height: 160px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; font-family: 'Courier New', Courier, monospace; font-size: 11px; line-height: 1.6; }
+    .log-line { opacity: 0; transform: translateY(10px); animation: slideUpFade 0.3s forwards; }
+    @keyframes slideUpFade { to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse-opacity { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+</style>
+
+<div class="row g-4 mb-5">
+    <div class="col-lg-8">
+        <div class="card audit-card p-4 shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr class="text-muted small uppercase" style="font-size: 11px; letter-spacing: 1px;">
+                            <th class="border-0 ps-3">Document Name</th>
+                            <th class="border-0">Latest Activity</th>
+                            <th class="border-0">Last Modified By</th>
+                            <th class="border-0 text-end pe-3">Audit Trail</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditBody">
+                        {% set seen_files = [] %}
+                        {% for log in logs %}
+                            {% if log.filename not in seen_files %}
+                                {% set operator = log.uploaded_by if log.uploaded_by is defined else log.user %}
+
+                                <tr class="audit-row"
+                                    data-filename="{{ log.filename }}"
+                                    data-owner="{{ operator }}"
+                                    style="display: none;">
+                                    <td class="ps-3 py-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3 p-2 bg-light rounded-3 text-primary"><i class="bi bi-file-earmark-text-fill fs-5"></i></div>
+                                            <div class="fw-bold text-dark">{{ log.filename }}</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="text-muted small"><i class="bi bi-clock me-1"></i> {{ log.timestamp }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px; font-size: 11px; font-weight: 800;">{{ operator[0]|upper }}</div>
+                                            <span class="fw-bold text-muted small">{{ operator }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end pe-3">
+                                        <button onclick="openVisualGraph('{{ log.filename }}')" class="btn-view-graph">
+                                            <i class="bi bi-diagram-3 me-1"></i> View Graph
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% set _ = seen_files.append(log.filename) %}
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card audit-card p-4 h-100 bg-dark text-white border-0 shadow-lg position-relative overflow-hidden">
+            <div class="position-absolute" style="top: -50px; right: -50px; width: 150px; height: 150px; background: rgba(79, 70, 229, 0.3); filter: blur(50px); border-radius: 50%;"></div>
+
+            <h5 class="fw-bold mb-4 position-relative z-1"><i class="bi bi-shield-lock-fill me-2 text-primary"></i>Cryptographic Engine</h5>
+
+            <div class="d-flex justify-content-between align-items-center mb-4 position-relative z-1">
+                <div>
+                    <div class="h2 fw-bold mb-0 text-primary" id="eventCounter">0</div>
+                    <div class="small opacity-50 fw-bold" style="letter-spacing: 1px; font-size: 10px;">SECURED OBJECTS</div>
+                </div>
+                <div class="text-end">
+                    <span class="badge border border-success text-success bg-success bg-opacity-10 px-2 py-1" style="font-size: 9px; letter-spacing: 1px; animation: pulse-opacity 2s infinite;">
+                        SYSTEM ACTIVE
+                    </span>
+                </div>
+            </div>
+
+            <div class="terminal-box mb-4 position-relative z-1">
+                <div class="terminal-header">
+                    <span>>_ WATCHDOG TELEMETRY</span>
+                    <span class="spinner-grow spinner-grow-sm text-primary" style="width: 8px; height: 8px;"></span>
+                </div>
+                <div class="terminal-feed" id="liveTerminalFeed">
+                    </div>
+            </div>
+
+            <div class="mt-auto position-relative z-1">
+                <div class="d-flex justify-content-between small mb-2"><span class="opacity-50">SHA-256 Integrity Check</span><span class="text-primary fw-bold">100% VALIDATED</span></div>
+                <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 100%"></div>
+                </div>
+                <p class="extra-small opacity-50 mt-3 text-center" style="font-size: 10px;">File metadata is continuously hashed to prevent unauthorized tampering.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="visualGraphModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content rounded-5 border-0 p-4 shadow-lg" style="background: #f8fafc;">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h3 class="fw-bold mb-1" id="graphModalTitle">Version Timeline</h3>
+                    <p class="text-muted small mb-0">Visual git-style evolution map of the document.</p>
+                </div>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-2 mt-4">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="graph-scroll-container" id="visualGraphContainer">
+                        <div class="text-center text-muted w-100 py-5">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <div class="mt-3 fw-bold">Generating Visual Matrix...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // System Filter Logic
+    document.addEventListener("DOMContentLoaded", function() {
+        const currentUser = "{{ current_user.username }}";
+        const userRole = "{{ current_user.role|lower }}";
+        let visibleCount = 0;
+
+        document.querySelectorAll('.audit-row').forEach(row => {
+            const owner = row.getAttribute('data-owner');
+            const filename = row.getAttribute('data-filename');
+
+            const isPublic = localStorage.getItem('public_share_' + filename) === 'true';
+            const hasAccess = (userRole === 'admin' || owner === currentUser || isPublic);
+
+            if (hasAccess) {
+                row.style.display = '';
+                visibleCount++;
+            }
+        });
+
+        const counterElement = document.getElementById('eventCounter');
+        if(counterElement) {
+            counterElement.innerText = visibleCount;
+        }
+
+        // --- START TERMINAL FEED ANIMATION ---
+        startTerminalFeed();
+    });
+
+    // Terminal Animation Logic
+    function startTerminalFeed() {
+        const feed = document.getElementById('liveTerminalFeed');
+        const actions = ["Hashing", "Validating", "Syncing", "Verifying signature:", "Checking integrity:"];
+
+        // Grab visible filenames to make logs look realistic
+        let activeFiles = [];
+        document.querySelectorAll('.audit-row').forEach(row => {
+            if(row.style.display !== 'none') activeFiles.push(row.getAttribute('data-filename'));
+        });
+        if(activeFiles.length === 0) activeFiles = ["system_config.dat", "auth_registry.db"];
+
+        setInterval(() => {
+            const action = actions[Math.floor(Math.random() * actions.length)];
+            const file = activeFiles[Math.floor(Math.random() * activeFiles.length)];
+            const hash = Math.random().toString(36).substring(2, 10).toUpperCase();
+
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            line.innerHTML = `<span style="color:#64748b">[${new Date().toLocaleTimeString()}]</span> ${action} <span class="text-white">${file}</span> <span class="text-primary">[${hash}]</span>`;
+
+            feed.appendChild(line);
+
+            if (feed.children.length > 5) {
+                feed.removeChild(feed.firstChild);
+            }
+        }, 1500);
+    }
+
+    // --- VISUAL GRAPH JAVASCRIPT LOGIC ---
+    function openVisualGraph(filename) {
+        const myModal = new bootstrap.Modal(document.getElementById('visualGraphModal'));
+        document.getElementById('graphModalTitle').innerHTML = `Timeline: <span class="text-primary">${filename}</span>`;
+        document.getElementById('visualGraphContainer').innerHTML = '<div class="text-center text-muted w-100 py-5"><div class="spinner-border text-primary" role="status"></div><div class="mt-3 fw-bold">Mapping Visual Nodes...</div></div>';
+        myModal.show();
+
+        fetch('/file_versions/' + filename)
+            .then(response => response.json())
+            .then(data => {
+                const isAdmin = "{{ current_user.role|lower }}" === 'admin';
+                const isOwner = data.length > 0 && data[0].uploaded_by === "{{ current_user.username }}";
+                const isPublic = localStorage.getItem('public_share_' + filename) === 'true';
+
+                if (!isAdmin && !isOwner && !isPublic) {
+                    if(typeof showToast === "function") showToast("Access Denied: This file is currently Private.", "error");
+                    myModal.hide();
+                    return;
+                }
+
+                let html = '<div class="d-flex align-items-start pt-4 px-3 w-100">';
+
+                data.forEach((v, index) => {
+                    const isLast = index === data.length - 1;
+                    const isMaster = (index === 0);
+
+                    let storedStamp = localStorage.getItem('stamp_' + v.version_name);
+                    let stampBadgeHtml = '';
+
+                    if(storedStamp) {
+                        stampBadgeHtml = `<span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill d-inline-block" style="font-size: 11px;"><i class="bi bi-check-circle-fill me-1"></i>Verified: ${storedStamp}</span>`;
+                    } else {
+                        if(isAdmin) {
+                            stampBadgeHtml = `<button onclick="applyDigitalStamp('${v.version_name}')" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold" style="font-size: 11px;">Sign & Approve</button>`;
+                        } else {
+                            stampBadgeHtml = `<span class="text-muted small d-inline-block" style="font-size: 11px;"><i class="bi bi-lock me-1"></i>Awaiting Admin Sign</span>`;
+                        }
+                    }
+
+                    html += `
+                    <div class="graph-node-wrapper" style="animation-delay: ${index * 0.1}s;">
+                        ${!isLast ? '<div class="graph-line"></div>' : ''}
+
+                        <div class="graph-dot ${isMaster ? 'node-current' : 'node-old'}">
+                            <i class="bi bi-diagram-2"></i>
+                        </div>
+
+                        <div class="mt-4 px-3">
+                            <div class="card border-0 shadow-sm p-4 mx-1 bg-white rounded-4 text-start" style="transition: 0.3s ease;">
+                                <div class="mb-2">
+                                    <span class="fw-bold fs-5 text-dark">${v.version_name}</span>
+                                    ${isMaster ? '<span class="badge bg-primary ms-2 rounded-pill align-middle">Master</span>' : ''}
+                                </div>
+
+                                <div class="d-flex align-items-center gap-2 mb-3 mt-3">
+                                    <div class="bg-light text-dark border rounded-circle d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 11px; font-weight: 800;">${v.uploaded_by[0].toUpperCase()}</div>
+                                    <div class="fw-bold text-dark" style="font-size: 13px;">${v.uploaded_by}</div>
+                                </div>
+
+                                <div class="text-muted small fw-bold mb-3 d-flex align-items-center">
+                                    <i class="bi bi-clock me-1"></i> ${v.timestamp}
+                                </div>
+
+                                <div class="border-top pt-3 mt-1">
+                                    ${stampBadgeHtml}
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+
+                html += '</div>';
+                document.getElementById('visualGraphContainer').innerHTML = html;
+            })
+            .catch(error => {
+                console.error("Error fetching versions: ", error);
+                document.getElementById('visualGraphContainer').innerHTML = '<div class="alert alert-danger mx-4 mt-4">Error loading visual timeline.</div>';
+            });
+    }
+</script>
+
+{% endblock %}

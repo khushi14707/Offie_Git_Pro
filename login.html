@@ -1,0 +1,143 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<!-- ==============================================
+     OFFICEGIT PRO: REFINED ENTERPRISE LOGIN
+     ============================================== -->
+<style>
+    :root {
+        --primary-blue: #2563eb;
+        --dark-slate: #0f172a;
+        --border-color: #e2e8f0;
+        --bg-soft: #f4f7fe;
+    }
+
+    body { background-color: var(--bg-soft) !important; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+
+    .auth-main-viewport {
+        display: flex;
+        min-height: 100vh;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+    }
+
+    /* LEFT SIDE: Visual Content Box (From Image 2) */
+    .auth-visual-side {
+        flex: 0 0 520px;
+        height: 85vh;
+        background: #000;
+        border-radius: 48px;
+        margin-right: 60px;
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        color: white;
+        position: relative;
+        box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+        animation: slideInLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .og-watermark {
+        position: absolute;
+        top: 50px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 130px;
+        font-weight: 900;
+        color: rgba(255, 255, 255, 0.04);
+        pointer-events: none;
+    }
+
+    .visual-content-box { position: relative; z-index: 2; }
+    .visual-content-box h1 { font-size: 44px; font-weight: 800; margin-bottom: 25px; line-height: 1.1; }
+
+    /* Advantages Card (Exact Replacement from Image 2) */
+    .advantage-card-inner {
+        background: #181818;
+        border-radius: 40px;
+        padding: 40px;
+        margin-top: 40px;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .adv-point { display: flex; align-items: center; gap: 20px; margin-bottom: 25px; }
+    .adv-icon-wrap { width: 44px; height: 44px; background: rgba(255,255,255,0.08); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--primary-blue); font-size: 20px; }
+
+    /* RIGHT SIDE: Optimized Interaction Form */
+    .auth-interaction-side { flex: 0 0 420px; display: flex; flex-direction: column; justify-content: center; animation: fadeIn 1s ease-in; }
+
+    .brand-logo-container { font-size: 24px; font-weight: 800; margin-bottom: 50px; display: flex; align-items: center; gap: 10px; }
+
+    .form-header-group { margin-bottom: 40px; }
+    .form-header-group h2 { font-size: 34px; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
+
+    .field-stack { margin-bottom: 26px; }
+    .field-label { font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 10px; display: block; }
+
+    .premium-input {
+        width: 100%; height: 52px; background: #fff; border: 1.5px solid var(--border-color); border-radius: 12px; padding: 0 18px; font-size: 14px; transition: 0.3s;
+    }
+    .premium-input:focus { border-color: #000; box-shadow: 0 0 0 4px rgba(0,0,0,0.03); outline: none; }
+
+    .submit-action-btn { width: 100%; height: 54px; background: #111; color: #fff; border: none; border-radius: 12px; font-weight: 700; margin-top: 10px; cursor: pointer; transition: 0.3s; }
+    .submit-action-btn:hover { background: #000; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+
+    @keyframes slideInLeft { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
+</style>
+
+<div class="auth-main-viewport">
+    <div class="auth-visual-side">
+        <div class="og-watermark">O.G</div>
+        <div class="visual-content-box">
+            <p class="small opacity-50 mb-2" style="letter-spacing: 2px;">OFFICEGIT PRO</p>
+            <h1>Welcome to OfficeGit</h1>
+            <p class="opacity-70 lead" style="font-size: 16px;">Managing document versions should be as easy as a single click. Join our community of organized students.</p>
+        </div>
+
+        <div class="advantage-card-inner">
+            <!-- Advantage 1 -->
+            <div class="adv-point">
+                <div class="adv-icon-wrap"><i class="bi bi-clock-history"></i></div>
+                <div><h6 class="mb-0 fw-bold">Instant Version Control</h6><p class="extra-small opacity-50 mb-0">Recover any previous version in seconds.</p></div>
+            </div>
+            <!-- Advantage 2 -->
+            <div class="adv-point">
+                <div class="adv-icon-wrap"><i class="bi bi-magic"></i></div>
+                <div><h6 class="mb-0 fw-bold">Smart Auto-Save</h6><p class="extra-small opacity-50 mb-0">System pushes updates automatically.</p></div>
+            </div>
+            <!-- Advantage 3 -->
+            <div class="adv-point">
+                <div class="adv-icon-wrap"><i class="bi bi-shield-check"></i></div>
+                <div><h6 class="mb-0 fw-bold">Role-Based Security</h6><p class="extra-small opacity-50 mb-0">Professional access control for everyone.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-interaction-side">
+        <div class="brand-logo-container">▲ OfficeGit</div>
+        <div class="form-header-group">
+            <h2>Sign in</h2>
+            <p class="text-muted small">Enter your details to access your secure repository.</p>
+        </div>
+
+        <form action="/login" method="post">
+            <div class="field-stack">
+                <label class="field-label text-uppercase">Username</label>
+                <input type="text" name="username" class="premium-input" placeholder="Enter username" required>
+            </div>
+            <div class="field-stack">
+                <label class="field-label text-uppercase">Password</label>
+                <input type="password" name="password" class="premium-input" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="submit-action-btn">Sign in to Workspace</button>
+        </form>
+
+        <div class="mt-5 text-center small text-muted">
+            New to OfficeGit Pro? <a href="/register" class="text-dark fw-bold text-decoration-none border-bottom border-dark">Create Account</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

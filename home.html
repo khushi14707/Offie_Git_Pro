@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container text-center d-flex flex-column justify-content-center align-items-center" style="min-height: 75vh; overflow: hidden;">
+    <div class="animate-fade">
+        <h1 class="display-2 fw-bold text-dark mb-2" style="letter-spacing: -2px;">OfficeGit Pro</h1>
+        <p class="lead text-secondary mb-5">Advanced Document Version Control & Portal Editing</p>
+
+        <div class="card shadow-lg border-0 p-5 mx-auto" style="width: 550px; border-radius: 40px; background: white;">
+            <div class="mb-4 text-primary"><i class="bi bi-cloud-arrow-up-fill" style="font-size: 80px;"></i></div>
+            <h3 class="fw-bold mb-4">Quick Upload</h3>
+            <form action="/upload" method="post" enctype="multipart/form-data">
+                <input type="file" name="file" class="form-control form-control-lg border-0 bg-light mb-4 py-3" style="border-radius: 15px;" accept=".pdf,.doc,.docx,.ppt,.pptx" required>
+                <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm fw-bold py-3">Start Versioning</button>
+            </form>
+        </div>
+    </div>
+</div>
+<style>
+    .animate-fade { animation: fadeInUp 0.8s ease-out; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+{% endblock %}

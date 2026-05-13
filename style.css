@@ -1,0 +1,138 @@
+/* =========================================
+   OFFICEGIT PRO: NOVA PROFESSIONAL THEME
+   ========================================= */
+:root {
+    --primary: #6366f1; /* Modern Indigo */
+    --primary-glow: rgba(99, 102, 241, 0.15);
+    --secondary: #0f172a; /* Deep Slate */
+    --bg-main: #f8fafc;
+    --sidebar-bg: #ffffff;
+    --card-bg: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border-soft: rgba(226, 232, 240, 0.8);
+    --shadow-premium: 0 10px 25px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+body {
+    background-color: var(--bg-main) !important;
+    font-family: 'Urbanist', sans-serif;
+    color: var(--text-main);
+    overflow-x: hidden;
+}
+
+/* Glassmorphism Sidebar */
+.sidebar {
+    background: var(--sidebar-bg) !important;
+    backdrop-filter: blur(10px);
+    border-right: 1px solid var(--border-soft);
+    width: 280px;
+    position: fixed;
+    height: 100vh;
+    padding: 30px 20px;
+    z-index: 1000;
+}
+
+.sidebar h3 {
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(to right, var(--primary), #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 40px;
+}
+
+.nav-link {
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 12px 18px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-link i { font-size: 1.2rem; }
+
+.nav-link:hover {
+    background: var(--primary-glow);
+    color: var(--primary);
+    transform: translateX(5px);
+}
+
+.nav-link.active {
+    background: var(--primary);
+    color: #fff !important;
+    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+}
+
+/* Premium Main Wrapper */
+.main-wrapper {
+    margin-left: 280px;
+    padding: 40px 50px;
+    min-height: 100vh;
+}
+
+/* Modern Glass Cards */
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-soft);
+    border-radius: 24px;
+    box-shadow: var(--shadow-premium);
+    transition: 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
+}
+
+/* Professional Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+    border: none;
+    border-radius: 14px;
+    padding: 10px 24px;
+    font-weight: 700;
+    box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.39);
+}
+
+.btn-primary:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.23);
+}
+
+.sidebar-upload-btn {
+    background: var(--secondary);
+    color: #fff;
+    border-radius: 14px;
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 30px;
+    border: none;
+    font-weight: 700;
+    transition: 0.3s;
+}
+
+.sidebar-upload-btn:hover { background: #000; }
+
+/* Table Styling */
+.table thead th {
+    background: transparent;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border: none;
+    padding: 15px;
+}
+
+.table tbody tr { border-bottom: 1px solid var(--border-soft); }
+.table tbody td { padding: 20px 15px; }
+
+/* Dashboard Specific Stats */
+.stat-card-word { background: linear-gradient(135deg, #6366f1 0%, #a5b4fc 100%); }
+.stat-card-pdf { background: linear-gradient(135deg, #ef4444 0%, #fca5a5 100%); }
+.stat-card-text { background: linear-gradient(135deg, #1e293b 0%, #475569 100%); }

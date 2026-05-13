@@ -1,0 +1,217 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-end mb-5">
+    <div>
+        <h1 class="fw-bold text-dark" style="letter-spacing: -1.5px; font-size: 2.8rem;">
+            {% if page_title == 'My Space' %}My Space
+            {% elif page_title == 'Recycle Bin' %}Recycle Bin
+            {% else %}Dashboard{% endif %}
+        </h1>
+        <p class="text-muted fw-medium fs-5 mb-0">
+            {% if page_title == 'My Space' %}View and manage all your active documents.
+            {% elif page_title == 'Recycle Bin' %}Recover or permanently delete files.
+            {% else %}Tracking document history and versions with Git-precision.{% endif %}
+        </p>
+    </div>
+    {% if page_title != 'Recycle Bin' %}
+    <div class="bg-white rounded-pill px-4 py-2 border shadow-sm w-25 d-flex align-items-center mb-1">
+         <i class="bi bi-search text-muted me-3"></i>
+         <input type="text" id="searchInput" placeholder="Search Documents..." class="border-0 bg-transparent outline-none w-100" style="font-size: 15px; outline: none;">
+    </div>
+    {% endif %}
+</div>
+
+{% if page_title == 'Dashboard' %}
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="card stat-card-word border-0 p-4 text-white">
+            <h6 class="text-uppercase small fw-bold opacity-75">Word Repository</h6>
+            <h2 class="fw-bold mb-0" style="font-size: 32px;">{{ stats.word }} <span class="fs-6 opacity-75 fw-normal">Modules</span></h2>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card-pdf border-0 p-4 text-white">
+            <h6 class="text-uppercase small fw-bold opacity-75">PDF Blueprints</h6>
+            <h2 class="fw-bold mb-0" style="font-size: 32px;">{{ stats.pdf }} <span class="fs-6 opacity-75 fw-normal">Docs</span></h2>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card-text border-0 p-4 text-white">
+            <h6 class="text-uppercase small fw-bold opacity-75">Source Code/Text</h6>
+            <h2 class="fw-bold mb-0" style="font-size: 32px;">{{ stats.text }} <span class="fs-6 opacity-75 fw-normal">Scripts</span></h2>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% set types = [
+        {'title': 'Word Documents', 'exts': ['doc', 'docx'], 'icon': 'bi-file-word-fill', 'color': '#6366f1'},
+        {'title': 'PDF Assets', 'exts': ['pdf'], 'icon': 'bi-file-pdf-fill', 'color': '#ef4444'},
+        {'title': 'Configuration/Text', 'exts': ['txt', 'md', 'json', 'csv'], 'icon': 'bi-file-text-fill', 'color': '#1e293b'}
+    ] %}
+
+    {% for type in types %}
+    <div class="col-lg-4">
+        <h5 class="fw-bold mb-4 px-2" style="color: {{ type.color }};">
+            <i class="bi {{ type.icon }} me-2"></i> {{ type.title }}
+        </h5>
+        <div class="card p-2">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <tbody id="fTable">
+                        {% for doc in docs %}
+                            {% if doc.filename.split('.')[-1].lower() in type.exts %}
+                            <tr class="file-row border-0" data-filename="{{ doc.filename }}" data-owner="{{ doc.uploaded_by }}" style="display: none;">
+                                <td class="ps-3 py-3">
+                                    <div class="fw-bold text-dark text-truncate d-flex align-items-center" style="max-width: 170px; font-size: 14px;">
+                                        {{ doc.filename }}
+                                        <span class="badge bg-success public-badge ms-2" style="display:none; font-size:9px; padding: 3px 6px;">
+                                            <i class="bi bi-globe text-white"></i>
+                                        </span>
+                                    </div>
+                                    <div class="text-muted extra-small" style="font-size: 11px;">{{ doc.timestamp.split(' ')[0] }}</div>
+                                </td>
+                                <td class="text-end pe-3">
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <button onclick="openPortal('{{ doc.filename }}')" class="btn btn-sm btn-light border-0 shadow-none text-primary p-2" title="Open"><i class="bi bi-eye"></i></button>
+                                        <button onclick="openVersions('{{ doc.filename }}')" class="btn btn-sm btn-light border-0 shadow-none text-dark p-2" title="Git Log"><i class="bi bi-clock-history"></i></button>
+
+                                        {% if current_user.role|lower == 'admin' %}
+                                        <button onclick="togglePublicShare('{{ doc.filename }}')" class="btn btn-sm btn-light border-0 shadow-none p-2 toggle-public-btn text-secondary" title="Share this specific file"><i class="bi bi-globe"></i></button>
+
+                                        <a href="/delete/{{ doc.id }}" class="btn btn-sm btn-light border-0 shadow-none text-danger p-2"><i class="bi bi-trash"></i></a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="card p-3">
+    <table class="table table-hover align-middle mb-0">
+        <thead>
+            <tr class="border-bottom">
+                <th class="ps-4">File Name</th>
+                <th>Author</th>
+                <th>Cycle Date</th>
+                <th class="text-end pe-4">Control</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for doc in docs %}
+            <tr class="file-row" data-filename="{{ doc.filename }}" data-owner="{{ doc.uploaded_by }}" style="display: none;">
+                <td class="ps-4 py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-light p-2 rounded-3 me-3"><i class="bi bi-file-earmark-text text-primary fs-5"></i></div>
+                        <span class="fw-bold text-dark">{{ doc.filename }}</span>
+                        <span class="badge bg-success public-badge ms-3" style="display:none; font-size:10px;">
+                            <i class="bi bi-globe text-white me-1"></i> Publicly Shared
+                        </span>
+                    </div>
+                </td>
+                <td><span class="badge rounded-pill bg-light text-dark border px-3">{{ doc.uploaded_by }}</span></td>
+                <td class="text-muted">{{ doc.timestamp }}</td>
+                <td class="text-end pe-4 d-flex justify-content-end align-items-center gap-2">
+                    {% if page_title == 'Recycle Bin' %}
+                        {% if current_user.role|lower == 'admin' %}
+                        <a href="/restore/{{ doc.id }}" class="btn btn-sm btn-primary rounded-pill px-4">RESTORE</a>
+                        {% else %}
+                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-3 py-2 rounded-pill" style="font-size: 11px;"><i class="bi bi-lock-fill me-1"></i> Admin Only</span>
+                        {% endif %}
+                    {% else %}
+                        <button onclick="openPortal('{{ doc.filename }}')" class="btn btn-sm btn-primary rounded-pill px-3">OPEN</button>
+                        <button onclick="openVersions('{{ doc.filename }}')" class="btn btn-sm btn-light border-0 px-3"><i class="bi bi-clock"></i></button>
+
+                        {% if current_user.role|lower == 'admin' %}
+                        <button onclick="togglePublicShare('{{ doc.filename }}')" class="btn btn-sm btn-light border-0 toggle-public-btn text-secondary px-3" title="Toggle Public Share for this file"><i class="bi bi-globe"></i></button>
+                        {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<script>
+    // CORE LOGIC FOR INDIVIDUAL PUBLIC/PRIVATE SHARING & SEARCH
+    function applyVisibilityAndSearch() {
+        const currentUser = "{{ current_user.username }}";
+        const userRole = "{{ current_user.role|lower if current_user.role else '' }}";
+        const searchInput = document.getElementById('searchInput');
+        const searchVal = searchInput ? searchInput.value.toLowerCase() : '';
+
+        document.querySelectorAll('.file-row').forEach(row => {
+            const owner = row.getAttribute('data-owner');
+            // Yahan hum SPECIFIC file ka naam nikal rahe hain
+            const filename = row.getAttribute('data-filename');
+
+            // Sirf USI specific file ka status LocalStorage se check ho raha hai
+            const isPublic = localStorage.getItem('public_share_' + filename) === 'true';
+
+            // Logic: Admin sab dekhega, Owner apni dekhega, aur koi bhi 'isPublic' wali file dekhega
+            const hasAccess = (userRole === 'admin' || owner === currentUser || isPublic);
+
+            // Search
+            const matchesSearch = row.innerText.toLowerCase().includes(searchVal);
+
+            if (hasAccess && matchesSearch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+
+            // Sirf is particular row ka badge aur button update karo
+            const badge = row.querySelector('.public-badge');
+            if (badge) {
+                badge.style.display = isPublic ? 'inline-block' : 'none';
+            }
+
+            const toggleBtn = row.querySelector('.toggle-public-btn');
+            if (toggleBtn) {
+                if (isPublic) {
+                    toggleBtn.classList.remove('btn-light', 'text-secondary');
+                    toggleBtn.classList.add('btn-success', 'text-white');
+                    toggleBtn.setAttribute('title', 'Revoke Public Access');
+                } else {
+                    toggleBtn.classList.remove('btn-success', 'text-white');
+                    toggleBtn.classList.add('btn-light', 'text-secondary');
+                    toggleBtn.setAttribute('title', 'Make Publicly Available');
+                }
+            }
+        });
+    }
+
+    // Toggle Function strictly for ONE filename at a time
+    function togglePublicShare(filename) {
+        const isPublic = localStorage.getItem('public_share_' + filename) === 'true';
+        if (isPublic) {
+            localStorage.removeItem('public_share_' + filename);
+            if(typeof showToast === "function") showToast("🔒 File is now Private.", "error");
+        } else {
+            localStorage.setItem('public_share_' + filename, 'true');
+            if(typeof showToast === "function") showToast("🌐 File Shared Publicly!", "success");
+        }
+        applyVisibilityAndSearch();
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        applyVisibilityAndSearch();
+    });
+
+    const searchBox = document.getElementById('searchInput');
+    if(searchBox) {
+        searchBox.addEventListener('keyup', applyVisibilityAndSearch);
+    }
+</script>
+{% endblock %}
